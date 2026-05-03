@@ -6,6 +6,10 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 async function getBoard(userId: string) {
+  if (process.env.NEXT_PHASE === 'phase-production-build') {
+    return null;
+  }
+
   "use cache";
 
   await connectDB();

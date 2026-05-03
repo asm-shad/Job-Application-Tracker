@@ -2,6 +2,10 @@ import mongoose from "mongoose";
 
 const MONGODB_URI = process.env.MONGODB_URI;
 
+// Check if we're in build time
+const isBuildTime = process.env.NEXT_PHASE === 'phase-production-build' || 
+                    process.env.NODE_ENV === 'production' && !MONGODB_URI;
+
 interface MongooseCache {
   conn: typeof mongoose | null;
   promise: Promise<typeof mongoose> | null;
@@ -18,6 +22,12 @@ if (!global.mongoose) {
 }
 
 async function connectDB() {
+  // Skip actual database connection during build time
+  if (isBuildTime) {
+    console.log("🔄 Skipping MongoDB connection during build");
+    return null;
+  }
+
   if (!MONGODB_URI) {
     throw new Error(
       "Please define the MONGODB_URI environment variable inside .env"
@@ -25,6 +35,7 @@ async function connectDB() {
   }
 
   if (cached.conn) {
+    console.log("✅ Using cached MongoDB connection");
     return cached.conn;
   }
 
@@ -33,7 +44,9 @@ async function connectDB() {
       bufferCommands: false,
     };
 
+    console.log("🔄 Connecting to MongoDB...");
     cached.promise = mongoose.connect(MONGODB_URI, opts).then((mongoose) => {
+      console.log("✅ MongoDB connected successfully");
       return mongoose;
     });
   }
@@ -42,6 +55,7 @@ async function connectDB() {
     cached.conn = await cached.promise;
   } catch (e) {
     cached.promise = null;
+    console.error("❌ MongoDB connection error:", e);
     throw e;
   }
 
