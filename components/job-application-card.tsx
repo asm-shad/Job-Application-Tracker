@@ -38,6 +38,7 @@ export default function JobApplicationCard({
   dragHandleProps,
 }: JobApplicationCardProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const [formData, setFormData] = useState({
     company: job.company,
     position: job.position,
@@ -99,14 +100,29 @@ export default function JobApplicationCard({
         <CardContent className="p-4">
           <div className="flex items-start justify-between gap-2">
             <div className="flex-1 min-w-0">
-              <h3 className="font-semibold text-sm mb-1">{job.position}</h3>
-              <p className="text-xs text-muted-foreground mb-2">
+              <h3 className="font-semibold text-sm mb-1 truncate" title={job.position}>
+              {job.position}
+            </h3>
+              <p className="text-xs text-muted-foreground mb-2 truncate" title={job.company}>
                 {job.company}
               </p>
               {job.description && (
-                <p className="text-xs text-muted-foreground mb-2 line-clamp-2">
-                  {job.description}
-                </p>
+                <div className="mb-2">
+                  <p className={`text-xs text-muted-foreground ${!expanded ? 'line-clamp-2' : ''}`}>
+                    {job.description}
+                  </p>
+                  {job.description.length > 100 && (
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setExpanded(!expanded);
+                      }}
+                      className="text-xs text-primary hover:underline mt-1"
+                    >
+                      {expanded ? 'Show less' : 'Show more'}
+                    </button>
+                  )}
+                </div>
               )}
               {job.tags && job.tags.length > 0 && (
                 <div className="flex flex-wrap gap-1 mb-2">

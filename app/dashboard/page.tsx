@@ -1,4 +1,4 @@
-import KanbanBoard from "@/components/kanban-board";
+import KanbanBoardWrapper from "@/components/kanban-board-wrapper"; // Changed this import
 import { getSession } from "@/lib/auth/auth";
 import connectDB from "@/lib/db";
 import { Board } from "@/lib/models";
@@ -42,7 +42,7 @@ async function DashboardPage() {
           <h1 className="text-3xl font-bold text-black">Job Hunt</h1>
           <p className="text-gray-600">Track your job applications</p>
         </div>
-        <KanbanBoard board={board} userId={session.user.id} />
+        <KanbanBoardWrapper board={board} userId={session.user.id} /> {/* Changed this line */}
       </div>
     </div>
   );

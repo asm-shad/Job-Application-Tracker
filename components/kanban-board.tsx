@@ -6,7 +6,6 @@ import {
   Calendar,
   CheckCircle2,
   Mic,
-  MoreHorizontal,
   MoreVertical,
   Trash2,
   XCircle,
@@ -36,7 +35,7 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import CreateJobApplicationDialog from "./create-job-dialog";
 import { useBoard } from "@/lib/hooks/useBoards";
 import JobApplicationCard from "./job-application-card";
@@ -92,26 +91,49 @@ function DroppableColumn({
     },
   });
 
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 3;
+  
   const sortedJobs =
     column.jobApplications?.sort((a, b) => a.order - b.order) || [];
+  
+  const totalPages = Math.ceil(sortedJobs.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const paginatedJobs = sortedJobs.slice(startIndex, startIndex + itemsPerPage);
+
+  // Go to previous page if current page has no content
+  useEffect(() => {
+    if (currentPage > totalPages && totalPages > 0) {
+      setCurrentPage(totalPages);
+    } else if (totalPages === 0) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
+
   return (
-    <Card className="min-w-75 shrink-0 shadow-md p-0">
+    <Card className="w-80 shrink-0 shadow-md p-0 flex flex-col">
       <CardHeader
-        className={`${config.color} text-white rounded-t-lg pb-3 pt-3`}
+        className={`${config.color} text-white rounded-t-lg py-3 px-4`}
       >
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 min-w-0 flex-1">
             {config.icon}
-            <CardTitle className="text-white text-base font-semibold">
+            <CardTitle 
+              className="text-white text-base font-semibold truncate" 
+              title={column.name}
+            >
               {column.name}
             </CardTitle>
+            <span className="text-xs bg-white/20 rounded-full px-2 py-0.5">
+              {sortedJobs.length}
+            </span>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-6 w-6 text-white hover:bg-white/20"
+                className="h-6 w-6 text-white hover:bg-white/20 shrink-0"
               >
                 <MoreVertical className="h-4 w-4" />
               </Button>
@@ -128,15 +150,15 @@ function DroppableColumn({
 
       <CardContent
         ref={setNodeRef}
-        className={`space-y-2 pt-4 bg-gray-50/50 min-h-100 rounded-b-lg ${
+        className={`space-y-2 pt-4 bg-gray-50/50 min-h-100 rounded-b-lg flex-1 ${
           isOver ? "ring-2 ring-blue-500" : ""
         }`}
       >
         <SortableContext
-          items={sortedJobs.map((job) => job._id)}
+          items={paginatedJobs.map((job) => job._id)}
           strategy={verticalListSortingStrategy}
         >
-          {sortedJobs.map((job, key) => (
+          {paginatedJobs.map((job, key) => (
             <SortableJobCard
               key={key}
               job={{ ...job, columnId: job.columnId || column._id }}
@@ -144,6 +166,33 @@ function DroppableColumn({
             />
           ))}
         </SortableContext>
+
+        {/* Pagination Controls */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between gap-2 mt-4 pt-2 border-t">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+              disabled={currentPage === 1}
+              className="h-8 px-2 text-xs"
+            >
+              Previous
+            </Button>
+            <span className="text-xs text-muted-foreground">
+              Page {currentPage} of {totalPages}
+            </span>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+              disabled={currentPage === totalPages}
+              className="h-8 px-2 text-xs"
+            >
+              Next
+            </Button>
+          </div>
+        )}
 
         <CreateJobApplicationDialog columnId={column._id} boardId={boardId} />
       </CardContent>
