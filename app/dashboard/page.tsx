@@ -1,4 +1,4 @@
-import KanbanBoardWrapper from "@/components/kanban-board-wrapper"; // Changed this import
+import KanbanBoard from "@/components/kanban-board";
 import { getSession } from "@/lib/auth/auth";
 import connectDB from "@/lib/db";
 import { Board } from "@/lib/models";
@@ -6,10 +6,6 @@ import { redirect } from "next/navigation";
 import { Suspense } from "react";
 
 async function getBoard(userId: string) {
-  if (process.env.NEXT_PHASE === 'phase-production-build') {
-    return null;
-  }
-
   "use cache";
 
   await connectDB();
@@ -46,7 +42,7 @@ async function DashboardPage() {
           <h1 className="text-3xl font-bold text-black">Job Hunt</h1>
           <p className="text-gray-600">Track your job applications</p>
         </div>
-        <KanbanBoardWrapper board={board} userId={session.user.id} /> {/* Changed this line */}
+        <KanbanBoard board={board} userId={session.user.id} />
       </div>
     </div>
   );
